@@ -9,14 +9,15 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.
 
 
 
-function SignedOut() {
+function SignedOut(props) {
   const [email, setEmail] = useState('')
-  const sendEmail = async() => {
+  const [sent, setSent] = useState(false)
+  const sendEmail = async () => {
     const { user, session, error } = await supabase.auth.signIn({
       email: email
-    }) 
+    })
   }
-  
+
   return (
     <div className='mt-5'>
       <div>
@@ -25,13 +26,10 @@ function SignedOut() {
         </h1>
         <div className='flex flex-col gap-2 text-black'>
           <div>
-            <input onChange={e=>setEmail(e.target.value)} type="text" placeholder='Email' />
-          </div>
-          <div>
-            <input type="password" placeholder='Password' />
+            <input onChange={e => setEmail(e.target.value)} type="text" placeholder='Email' />
           </div>
           <div className='bg-green-400 w-fit mx-auto px-2 rounded-lg'>
-            <button onClick={sendEmail}>LOGIN</button>
+            <button onClick={sendEmail}>Send Magic Link</button>
           </div>
         </div>
 
@@ -40,10 +38,34 @@ function SignedOut() {
   )
 }
 
-function TaskPage() {
+function TaskPage(props) {
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut()
+  }
+
+  const user = props.user
+
+
+
+
   return (
     <div >
-      Logged in
+      <div>
+        <button onClick={signOut}>sign out</button>
+      </div>
+      <div className='flex flex-col gap-y-5'>
+        <div>
+          <h1 className='text-xl'>
+            Hi, {user.user_metadata.username}
+          </h1>
+        </div>
+        <div className='flex mx-auto gap-2 w-1/2'>
+            <input  className='dark:bg-gray-600 border-2 w-full px-2  py-1 border-black rounded-lg'></input> 
+            <button className='text-xl bg-green-300 my-auto hover:bg-green-500 transition rounded-xl'>📨</button>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -54,6 +76,7 @@ export default function Home() {
   const [isDark, setIsDark] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (localStorage.getItem('dark') === 'true') {
@@ -62,10 +85,12 @@ export default function Home() {
   }, [])
 
 
+  const [user, setUser] = useState()
   useEffect(() => {
     const getData = async () => {
       const session = supabase.auth.session()
-      console.warn(session)
+      const user = supabase.auth.user()
+      setUser(user)
       if (session !== null) {
         setIsAuth(true)
       } else {
@@ -80,13 +105,13 @@ export default function Home() {
   return (
     <div className={isDark ? 'dark' : ''}>
       <Head>
-        <title>Task Manager</title>
+        <title>Tecna Tasks</title>
       </Head>
       <main className='h-screen dark:bg-gray-800 dark:text-gray-100 text-center'>
         <div className=''>
           <br />
           <h1 className='text-4xl'>
-            Task Manager
+            Tecna Tasks
           </h1>
           <h4>
             made by @siddhantmadhur <br />
@@ -123,9 +148,9 @@ export default function Home() {
               <div>
                 {
                   isAuth ? (
-                    <TaskPage></TaskPage>
+                    <TaskPage user={user}></TaskPage>
                   ) : (
-                    <SignedOut></SignedOut>
+                    <SignedOut setError={setError}></SignedOut>
                   )
                 }
               </div>
