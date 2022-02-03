@@ -4,7 +4,19 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
+
+
 function SignedOut() {
+  const [email, setEmail] = useState('')
+  const sendEmail = async() => {
+    const { user, session, error } = await supabase.auth.signIn({
+      email: email
+    }) 
+  }
+  
   return (
     <div className='mt-5'>
       <div>
@@ -13,13 +25,13 @@ function SignedOut() {
         </h1>
         <div className='flex flex-col gap-2 text-black'>
           <div>
-            <input type="text" placeholder='Email' />
+            <input onChange={e=>setEmail(e.target.value)} type="text" placeholder='Email' />
           </div>
           <div>
             <input type="password" placeholder='Password' />
           </div>
           <div className='bg-green-400 w-fit mx-auto px-2 rounded-lg'>
-            <button>LOGIN</button>
+            <button onClick={sendEmail}>LOGIN</button>
           </div>
         </div>
 
@@ -36,6 +48,8 @@ function TaskPage() {
   )
 }
 
+
+
 export default function Home() {
   const [isDark, setIsDark] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
@@ -47,12 +61,12 @@ export default function Home() {
     }
   }, [])
 
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
   useEffect(() => {
     const getData = async () => {
-      const user = supabase.auth.user()
-      if (user !== null) {
+      const session = supabase.auth.session()
+      console.warn(session)
+      if (session !== null) {
         setIsAuth(true)
       } else {
         setIsAuth(false)
