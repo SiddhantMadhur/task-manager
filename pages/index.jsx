@@ -38,6 +38,19 @@ function SignedOut(props) {
   )
 }
 
+
+function Card(props) {
+  return (
+    <div className='bg-green-600  py-2 text-green-100 rounded-lg mx-auto w-full md:w-1/2'>
+      <div>{props.content}</div>
+      <div className='bg-red-500 hover:bg-red-600 rounded-lg mx-10'>
+        <button className='rounded-lg w-full border'>🗑️</button>
+      </div>
+    </div>
+  )
+}
+
+
 function TaskPage(props) {
 
   const signOut = async () => {
@@ -46,8 +59,9 @@ function TaskPage(props) {
 
   const user = props.user
   const [content, setContent] = useState('')
+  const [data, setData] = useState([])
 
-  const createData = async() => {
+  const createData = async () => {
     const { data, error } = await supabase.from('tasks').insert([
       {
         user_id: user.id,
@@ -57,7 +71,16 @@ function TaskPage(props) {
     setContent('')
   }
 
-  
+
+
+  useEffect(() => {
+    const getData = async () => {
+      const { data, error } = await supabase.from('tasks').select('content', 'status')
+      setData(data)
+      console.log(data)
+    }
+    getData()
+  }, [])
 
   return (
     <div >
@@ -68,15 +91,25 @@ function TaskPage(props) {
         <div>
           <h1 className='text-xl'>
             Hi, {user.user_metadata.username}
-            
+
           </h1>
         </div>
-        <div className='flex mx-auto gap-2 w-1/2'>
-            <input onChange={e=>setContent(e.target.value)} value={content} className='dark:bg-gray-600 border-2 w-full px-2  py-1 border-black rounded-lg'></input> 
-            <button onClick={createData} className='text-xl bg-green-300 my-auto hover:bg-green-500 transition rounded-xl'>📨</button>
+        <div className='flex mx-auto gap-2 w-full px-2 md:w-1/2'>
+          <input onChange={e => setContent(e.target.value)} value={content} className='dark:bg-gray-600 border-2 w-full px-2  py-1 border-black rounded-lg'></input>
+          <button onClick={createData} className='text-xl bg-green-300 my-auto hover:bg-green-500 transition rounded-xl'>📨</button>
         </div>
       </div>
-
+      <div>
+        <div className='flex flex-col dark:bg-gray-800 pb-10 mx-auto gap-5 mt-10 w-full px-2 lg:w-1/2'>
+          {
+            data.map((data) => {
+              if (!data.status) {
+                return <Card content={data.content} />
+              }
+            }).reverse()
+          }
+        </div>
+      </div>
     </div>
   )
 }
@@ -118,57 +151,59 @@ export default function Home() {
       <Head>
         <title>Tecna Tasks</title>
       </Head>
-      <main className='h-screen dark:bg-gray-800 dark:text-gray-100 text-center'>
-        <div className=''>
-          <br />
-          <h1 className='text-4xl'>
-            Tecna Tasks
-          </h1>
-          <h4>
-            made by @siddhantmadhur <br />
-            open sourced on <span className='text-blue-500 hover:text-blue-800'><a target={'_blank'} href='https://github.com/SiddhantMadhur/task-manager'>Github</a></span>
+      <div className=''>
+        <main className='h-screen dark:bg-gray-800 dark:text-gray-100 text-center'>
+          <div className=''>
+            <br />
+            <h1 className='text-4xl'>
+              Tecna Tasks
+            </h1>
+            <h4>
+              made by @siddhantmadhur <br />
+              open sourced on <span className='text-blue-500 hover:text-blue-800'><a target={'_blank'} href='https://github.com/SiddhantMadhur/task-manager'>Github</a></span>
 
-          </h4>
-          <h6 className='text-sm'>
+            </h4>
+            <h6 className='text-sm'>
+              {
+                !isDark ? (
+                  <button onClick={() => {
+                    setIsDark(true)
+                    localStorage.setItem('dark', 'true')
+                  }}>
+                    enable dark mode
+                  </button>
+                ) : (
+                  <button onClick={() => {
+                    setIsDark(false)
+                    localStorage.removeItem('dark')
+                  }}>
+                    enable light mode
+                  </button>
+                )
+              }
+            </h6>
+          </div>
+          <div>
             {
-              !isDark ? (
-                <button onClick={() => {
-                  setIsDark(true)
-                  localStorage.setItem('dark', 'true')
-                }}>
-                  enable dark mode
-                </button>
+              loading ? (
+                <div className='grid place-items-center mt-10'>
+                  <CircularProgress />
+                </div>
               ) : (
-                <button onClick={() => {
-                  setIsDark(false)
-                  localStorage.removeItem('dark')
-                }}>
-                  enable light mode
-                </button>
+                <div>
+                  {
+                    isAuth ? (
+                      <TaskPage user={user}></TaskPage>
+                    ) : (
+                      <SignedOut setError={setError}></SignedOut>
+                    )
+                  }
+                </div>
               )
             }
-          </h6>
-        </div>
-        <div>
-          {
-            loading ? (
-              <div className='grid place-items-center mt-10'>
-                <CircularProgress />
-              </div>
-            ) : (
-              <div>
-                {
-                  isAuth ? (
-                    <TaskPage user={user}></TaskPage>
-                  ) : (
-                    <SignedOut setError={setError}></SignedOut>
-                  )
-                }
-              </div>
-            )
-          }
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
