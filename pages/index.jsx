@@ -45,9 +45,19 @@ function TaskPage(props) {
   }
 
   const user = props.user
+  const [content, setContent] = useState('')
 
+  const createData = async() => {
+    const { data, error } = await supabase.from('tasks').insert([
+      {
+        user_id: user.id,
+        content: content
+      }
+    ])
+    setContent('')
+  }
 
-
+  
 
   return (
     <div >
@@ -58,11 +68,12 @@ function TaskPage(props) {
         <div>
           <h1 className='text-xl'>
             Hi, {user.user_metadata.username}
+            
           </h1>
         </div>
         <div className='flex mx-auto gap-2 w-1/2'>
-            <input  className='dark:bg-gray-600 border-2 w-full px-2  py-1 border-black rounded-lg'></input> 
-            <button className='text-xl bg-green-300 my-auto hover:bg-green-500 transition rounded-xl'>📨</button>
+            <input onChange={e=>setContent(e.target.value)} value={content} className='dark:bg-gray-600 border-2 w-full px-2  py-1 border-black rounded-lg'></input> 
+            <button onClick={createData} className='text-xl bg-green-300 my-auto hover:bg-green-500 transition rounded-xl'>📨</button>
         </div>
       </div>
 
